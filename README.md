@@ -89,7 +89,7 @@ This project presents an AI-powered online exam proctoring platform that leverag
 ### Method 1: Manual Compilation
 
 ```bash
-cd /home/prototype/Downloads/DIIT_Project_Book_Template__2025
+cd /home/prototype/Downloads/Project_book
 
 # First pass - generates .aux files
 pdflatex thesis.tex
@@ -107,7 +107,7 @@ pdflatex thesis.tex
 ### Method 2: Automatic (Recommended)
 
 ```bash
-cd /home/prototype/Downloads/DIIT_Project_Book_Template__2025
+cd /home/prototype/Downloads/Project_book
 
 # Automatically runs all necessary passes
 latexmk -pdf thesis.tex
@@ -159,7 +159,7 @@ All diagrams are created using draw.io and stored in `/tmp/Project_folder/`.
 
 **Target Directory:** Place all exported diagrams in:
 ```
-/home/prototype/Downloads/DIIT_Project_Book_Template__2025/Chap3/
+/home/prototype/Downloads/Project_book/Chap3/
 ```
 
 ---
@@ -167,7 +167,7 @@ All diagrams are created using draw.io and stored in `/tmp/Project_folder/`.
 ## File Structure
 
 ```
-DIIT_Project_Book_Template__2025/
+Project_book/
 ├── thesis.tex                    # Main document file
 ├── bibfile.bib                   # Bibliography (18 references)
 ├── rac.sty                       # Custom style file
