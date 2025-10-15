@@ -1,130 +1,207 @@
-\chapter{Algorithm Analysis}
+\chapter{Implementation}
 
-\section{Traffic Analysis}
+This chapter presents the implementation of the AI-Powered Online Exam Proctoring System, including the development tools, user interfaces, and core functionalities for different user roles.
 
+\section{Overview}
 
+The system is implemented as a full-stack web application using React 19.0 for the frontend and Flask 3.1.1 for the backend. It integrates YOLOv8n for object detection and MediaPipe for facial analysis to enable automated proctoring during online examinations. The system supports real-time video streaming using WebRTC technology with dual camera support (desktop and mobile). The implementation provides three distinct user interfaces: Admin Interface (system management, user administration, analytics), Teacher Interface (exam creation, student monitoring, result management), and Student Interface (exam participation with real-time proctoring).
 
-A SDN based IoT infrastructure basically provides free-flow of data from sensors and wireless devices and the efficiency of the network depends on the management and security of traffic. Network traffics are dynamic and hence its more prone to malicious attacks such as DDOS, MITM, Replay, Side Channel etc.
+\section{The Development Tool}
 
-\subsection{Traffic Analysis Technique}
+The development utilized modern tools and technologies: \textbf{Frontend} - React 19.0 with Tailwind CSS, Vite build tool, Socket.IO Client, React Router v6; \textbf{Backend} - Python 3.12 with Flask 3.1.1, Flask-SocketIO, PyJWT 2.10.1, Bcrypt 4.3.0, Gunicorn; \textbf{AI/ML} - PyTorch 2.7.1, Ultralytics YOLOv8n, MediaPipe 0.10.21, OpenCV 4.11; \textbf{Database} - MySQL 8.0, Visual Studio Code, Git/GitHub, Swagger/Flasgger, Sentry SDK.
 
-There are various classification techniques to classify the network traffic, but among these the following three techniques are mostly used-port based, payload/DPI (Deep Packet Inspection) based and ML (Machine Learning)-technique.
+\section{Welcome Page and User Login}
 
-In \textbf{Port-based technique}, IP addresses are identified and used to classify the corresponding applications which are registered under Assigned Number Authority (AINA). In the other side, \textbf{Payload-based} or \textbf{Deep Packet Inspection(DPI)} are basically used to classify dynamic port numbers (peer to peer applications) and packets are analyzed for signatures and authentications of network applications of traffic.\textbf{ ML (Machine Learning)-technique} uses trained classifiers as input for traffic classification based on the data set.
+The welcome page serves as the landing interface featuring a clean, modern design with gradient background, system branding, key feature highlights (real-time AI proctoring, dual camera support, instant alerts), and call-to-action buttons. The login system provides secure JWT-based authentication with role-based access control where users select their role (Admin/Teacher/Student) and enter credentials. Security features include bcrypt password hashing, rate limiting, input sanitization, and CSRF protection.
 
-For our proposed system, to analysis the traffic efficiently we are applying ML-technique, as port-based classification doesn’t provide the identification of dynamic ports and payload-based doesn’t work for encrypted traffic and requires continuous updating of signature patterns of new applications. ML-technique overcomes these shortcomings of the following classification techniques and works more efficiently to classify data packets \cite{6091325,Santi-journal}.
-
-
-\begin{figure}[ht]
+\begin{figure}[p]
     \centering
-    \includegraphics{Chap4/trafficanalysis.png}
-    \caption{Traffic Analysis Technique}
-    \label{fig:traffic_analysis}
+    \includegraphics[width=0.7\textwidth]{Chap4/welcome_page.jpg}
+    \caption{Welcome Page - Landing Interface}
+    \label{fig:welcome_page}
 \end{figure}
 
-\textbf{ML (Machine Learning)- Technique}
-
-Machine learning is used for dynamic analysis for traffic and uses \textbf{WEKA} tool for detection method. It has two techniques for classification- supervised and unsupervised. In \textbf{Supervised} technique there is a training data set as input to train the system model for the expected output but in \textbf{unsupervised} technique there is no training/known data set and it works based on the prior knowledge or the statistical information.
-
-
-
-\section{Feature Extraction}
-
-By analyzing the network traffic, we get a data set which is the combination of the malware and benign data packets and this is the first major component for any malware detection system. A feature extractor is used to extract the features from the specified data set and we need to extract a group of features to detect attacks, which is not possible by extracting any specific or single feature.
-
-\subsection{Feature Extraction Tool}
-Here we are using the \textbf{Wireshark} and \textbf{Net Mate tool} for the corresponding live data packet capturing and feature extraction purpose.
-\begin{enumerate}
-    \item \textbf{Wireshark:} Wireshark is an open source software and an efficient network packet analyzer. Wireshark captures the network traffic from various wireless devices and displays them with very detailed protocol information and save the captured data packet. It can also export some or all packets in a number of capture file formats and filter them on many criteria. The basic features of Wireshark tools are-
-    \begin{itemize}
-        \item Capture traffics from live network or read data from already captured file.
-        \item Terminal version, named Tshark or GUI is used to browse captured traffic.
-        \item Display filter is used to refine and edit traffic programmatically.
-        \item For dissecting protocols, Plug-ins is developed.
-        \item Captured traffic can be used to detect VoIP calls when compatible encoding is used for encoding. 
-        \item Only selected traffic appears with several timers, settings and filters.
-    \end{itemize}
-    \item \textbf{Net Mate Tool:} After capturing data packets, the features are extracted using Net Mate tool as features depict the behavioral description of traffic. Net Mate includes two types of modules:
-    \begin{itemize}
-        \item Packet Processing Modules designed to implement different metrics 
-        \item Export Module that implement different output module
-    \end{itemize}
-    Our concerned flow features are implemented in \textbf{Packet Processing Module}. Two different types of rules are used to produce the output: description rules and recognition rules.
-\end{enumerate}
-\begin{figure}[ht]
+\begin{figure}[p]
     \centering
-    \includegraphics[width=5in]{Chap4/FeatureExtraction.PNG}
-    \caption{Feature Extraction Process}
-    \label{fig:feature_extraction}
-\end{figure}
-\section{Feature Selection}
-
-Feature Selection is an important step after traffic analysis to detect the abnormality occurring in a system. It can be defined as automatic selection of attributes in data samples that are most relevant to the predictive modeling problem. It does the mapping to excludes the irrelevant or redundant attributes and specifically defines most prominent for the better performance of the system.
-
-As in our proposed system we are working on a large amount of a traffic of a network so feature selection should be done for the following requirements:
-\begin{itemize}
-    \item To create an accurate predictive model that will give a better accuracy whilst requiring less data.
-    \item it reduces the complexity of a model and makes it easier to interpret the required result.
-    \item It enables the model to train faster on data sample as there is no redundant attributes.
-    \item This method also reduces the problem of over fitting by enhancing the generalization in the model.
-\end{itemize}
-\subsection{Selection Method}
-There are mainly three methods that are used in feature selection:
-\begin{enumerate}
-    \item \textbf{Filter Method:} Here features are selected on the basis of their scores in various statistical tests for their correlation with the outcome variable which is Machine Language Independent.\textbf{Pearson’s Correlation, LDA, ANOVA, Chi- Square}  are the methods which are used to define correlation among the features.
-    \item \textbf{Wrapper Method:} This method considers the selection of a set of features as a search problem or algorithm to validate the prediction where different combinations are prepared, evaluated and compared to other combinations. After evaluating it assigns a score based on model accuracy. It can always provide the best subset of features. But this method has a high computational cost.
-    \item \textbf{Embedded Method:} This method tries to combine the efficiency of other two methods and performs the selection of variables in the process of training and is usually specific to given learning machines. It basically learns which features best contribute to the accuracy of the model while the model is being created. Most common algorithms are the \textbf{LASSO, Elastic Net, Ridge Regression}used in this method.
-\end{enumerate}
-
-For our model \textbf{Wrapper Method} is most applicable. As at first we have analyzed network traffic and after that we have implemented a Search process for extracting Unusual features to detect our attacks. From the complete list of Feature set we have further selected the most effective features to make our feature domain more powerful.
-
-\subsection{Selection Tool}
-The immediate step after feature extraction of any attack detection procedure is feature selection which is the final input feature set to feed into the system by using any machine learning technique. To select the desired features from the extracted features set, an efficient tool-set, WEKA is used in our attack detection process.
-
-\textbf{WEKA:} WEKA, (Waikato Environment for Knowledge Analysis), named after a flightless New Zealand bird, supports many feature selection techniques, i.e. correlation based, information gain based, learner based etc. Weka is a set of machine learning algorithms for data mining tasks. The algorithms can be used directly on dataset or it can be called from Java code. 
-
-Weka contains tools for data pre-processing, classification, regression, clustering, association rules, and visualization. It provides SQL access with assistance of Java Database Connectivity. Weka provides four UI:
-\begin{itemize}
-    \item Explorer
-    \item Experimenter
-    \item KnowledgeFlow
-    \item Simple CLI.
-\end{itemize}
-Explorer is the main user interface of Weka which have following panels:
-\begin{enumerate}
-    \item \textbf{Preprocess:} Choosing the data file.
-	\item \textbf{Classify:} Applying and experimenting with different algorithms on preprocessed data files.
-	\item \textbf{Cluster:} Applying different clustering tools, which identify clusters within the data file.
-	\item \textbf{Association:} Applying association rules, which identify the association within the data.
-	\item \textbf{Select attributes:} Seeing the changes on the inclusion and exclusion of attributes from the experiment.
-	\item \textbf{Visualize:} Seeing the possible visualization produced on the data set in a 2D format, in scatter plot and bar graph output.
-\end{enumerate}
-The user cannot move between the different tabs until the initial preprocessing of the data set has been completed. This procedure can also be done with component based KnowledgeFlow and from Simple CLI. Experimenter provides option to compare predictive performance of machine learning algorithms on data-sets. 
-
-\section{Feature Specification on Proposed Model}
-
-From extraction procedure eighteen features are collected which are grouped into nine features for the convenience of our work.And these nine features are taken as input for the further process.The mapping or selection of features are simplified as the below figure \ref{fig:feature}
-\begin{figure}[ht]
-    \centering
-    \includegraphics{Chap4/feature.jpg}
-    \caption{Feature Extraction and Selection}
-    \label{fig:feature}
+    \includegraphics[width=0.7\textwidth]{Chap4/login_page.jpg}
+    \caption{User Login Page}
+    \label{fig:login_page}
 \end{figure}
 
-\begin{enumerate}
- \item \textbf{Server Overload:} It is one of the most common feature that happens in any kind of physical layer attack in the network. Increase of volume of data packets, excessive traffic is the indication of Server Overload. Though it’s a common feature but there is possibility of Side Channel Attack, Malicious Code and DDoS attack. 
-\item \textbf{Slow Down:} It’s a common feature of DDoS and Malicious Code Attack. In DDoS there creates traffic floods in bandwidth and resources so the performance evaluation becomes very poor. It is definitely a symptom that something is wrong with the system. In malicious code there occurs illegitimate actions which creates load on the system.
+\section{Admin Dashboard}
 
+The Admin Dashboard provides comprehensive system management with full control over users, exams, and configuration. The dashboard displays key statistics including total students, teachers, exams, active exams, and violations detected with sidebar navigation, main content area, and header bar.
 
-\item \textbf{Sudden shut Down:} It’s the extreme case of DDoS attack in the network. a denial-of-service attack (DDoS attack) is a cyber-attack in which the perpetrator seeks to make a machine or network resource unavailable to its legitimate users by temporarily or indefinitely disrupting services of a host connected to the internet. So when network will not able to manage the overload it will just shut down.
-\item \textbf{Error Message:} It is the most common characteristics of attacks that frequently occurs in IoT network model. It will generate automatically from the Operating System when it will suspect unusual activities in the network. So it is a great source of predicting that there is a third party in the network who is trying to do something illegal in the network. Features-Bit flipping in memory cells, Suspicious Admin Behavior, Unauthorized Data Access are redundant which is mapped to exclude after feature selection method. Because all these three activities are unusual and it will result an error message. DDoS, Side Channel Attack, Malicious Code Attack, Man in The Middle(MITM) attack can be suspected by this feature.
-\item \textbf{	SSH Alarm:} SSH is one of the most popular communication protocols on the Internet used by admins, developers. SSH alarm is an email alert, when someone logs server via SSH (Server Secure Shell) can be pretty useful to track who is actually using server. It’s a very unique feature to track MITM attack as an intruder might not login at first attempt.
-\item \textbf{Twin-WiFi:} In MITM the main aim of an intruder is to entry the network and hampers the integrity, confidentiality, authenticity of admin. To get illegal access he can adapts the method of duplicate WiFi SSID or Address that is a very prominent feature to identify that the system is being attacked by the third party.
-\item \textbf{Phishing:} It’s a great threat to the security of users. It is actually a cybercrime in which targets are contacted by email, telephone or text message by someone posing as a legitimate institution to lure individuals into providing sensitive data such as personally identifiable information, banking information, credit card details, and passwords. Intruder who conducts MITM attack mostly does this to earn in an illegal way.
-\item \textbf{SNR decrease:} When noise of a system increases the SNR decreases that indicates the poor performance of the system. Voltage drops with proportional to SNR, that is not definitely a good symptom for a model. It is the most prominent feature to detect the Side Channel Attack. it is caused by the information gained from the network so the noise increases which should be noticed to detect attack.
-\item \textbf{Lack of Memory Space: }Malicious code is an application security threat that cannot be efficiently controlled by conventional antivirus software easily. It describes a broad category of system security terms that includes attack scripts, viruses, worms, Trojan horses, backdoors and malicious active content. So sometimes it suddenly just occupies the memory space of user device and gives warning to the user of “Memory is Full”. That’s definitely occurs a great problem of storing.
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Chap4/admin_dashboard_overview.jpg}
+    \caption{Admin Dashboard Overview}
+    \label{fig:admin_dashboard}
+\end{figure}
 
-Here FIS will primarily work on these \textbf{Nine} Selected features where rules will be considered in controller to identify DDoS, MITM, Malicious Code Attack and Side Channel Attack. Rules are defined according to the priority of the features.
-\end{enumerate}
+\subsection{Student Management}
 
+Administrators manage student accounts with CRUD operations, paginated tables with search/filters, bulk operations (CSV import/export), and detailed profile views. The add student form captures personal information, academic details (roll number, department, batch, section, semester), and account settings.
 
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Chap4/admin_student_management.jpg}
+    \caption{Student Management Interface}
+    \label{fig:admin_students}
+\end{figure}
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Chap4/admin_add_student.png}
+    \caption{Add Student Form}
+    \label{fig:admin_add_student}
+\end{figure}
+
+\subsection{Teacher Management}
+
+Similar capabilities for managing teacher accounts including viewing teachers with course assignments, adding new teachers, editing profiles, and assigning courses.
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Chap4/admin_teacher_management.png}
+    \caption{Teacher Management Interface}
+    \label{fig:admin_teachers}
+\end{figure}
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Chap4/admin_add_teacher.png}
+    \caption{Add Teacher Form}
+    \label{fig:admin_add_teacher}
+\end{figure}
+
+\section{Teacher Dashboard}
+
+The Teacher Dashboard enables faculty to create exams, monitor students in real-time, and manage results. Teachers see quick statistics, recent activity, quick action buttons, and a calendar view of scheduled exams.
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Chap4/teacher_dashboard_overview.jpg}
+    \caption{Teacher Dashboard Overview}
+    \label{fig:teacher_dashboard}
+\end{figure}
+
+\subsection{Create Exam and Manage Exams}
+
+The exam creation uses a multi-step form for basic information, question configuration, and proctoring settings. The multi-step process includes: (1) Basic Information - exam title, course selection, date/time scheduling, academic filters (department, batch, section, semester); (2) Question Configuration - adding MCQ and written questions with marks allocation; (3) Proctoring Settings - configuring detection sensitivity, violation thresholds, camera requirements; (4) Review and Publish. Teachers manage exams in a tabbed interface showing Upcoming, Live, Completed, and Draft exams with options to edit, clone, delete, view results, and download reports.
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Chap4/teacher_create_exam.jpg}
+    \caption{Create Exam Interface - Multi-step Form}
+    \label{fig:teacher_create}
+\end{figure}
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Chap4/teacher_my_exams.jpg}
+    \caption{My Exams List - Management Interface}
+    \label{fig:teacher_exams}
+\end{figure}
+
+\subsection{Live Monitoring}
+
+Real-time monitoring displays student grid view with video thumbnails and violation tracking. The monitoring interface shows live video feeds from all students taking the exam, with color-coded status indicators (green for normal, yellow for warnings, red for violations), violation count badges, and aggregate statistics showing total students, active students, and total violations detected.
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Chap4/teacher_live_monitoring_grid.jpg}
+    \caption{Live Monitoring Grid - Real-time Student Surveillance}
+    \label{fig:teacher_monitor}
+\end{figure}
+
+\subsection{Results and Student Management}
+
+Teachers access results interface with summary statistics and export functionality. The results interface displays exam performance metrics, individual student scores, automated grading for MCQs, and manual grading interface for written responses with feedback options. The student management section shows all students in assigned sections with detailed profiles and performance analytics.
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Chap4/teacher_results_overview.jpg}
+    \caption{Results Overview - Exam Performance Metrics}
+    \label{fig:teacher_results}
+\end{figure}
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Chap4/teacher_students.png}
+    \caption{Students Management - Class Overview}
+    \label{fig:teacher_students}
+\end{figure}
+
+\subsection{Unban Requests}
+
+Teachers review student appeals for violations with violation history and snapshots. When students are banned due to excessive violations, they can submit unban requests with explanations. Teachers can review the complete violation history, view captured snapshots during violations, and make decisions to approve or reject the appeal.
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Chap4/teacher_unban_requests.png}
+    \caption{Unban Requests - Student Appeals Review}
+    \label{fig:teacher_unban}
+\end{figure}
+
+\section{Student Dashboard}
+
+The Student Dashboard provides access to assigned exams, proctored exam-taking with real-time AI monitoring, and performance tracking. Students see upcoming exam cards with countdown timers, recent exam history with scores, performance summary graphs, and notification center for important updates.
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Chap4/student_dashboard_overview.jpg}
+    \caption{Student Dashboard Overview}
+    \label{fig:student_dashboard}
+\end{figure}
+
+\subsection{Exam Setup and Camera Configuration}
+
+Students complete system compatibility checks and optionally set up mobile camera using QR code pairing. Before starting an exam, students must pass system checks for camera availability, browser compatibility, network connectivity, and system requirements. For enhanced monitoring, students can enable dual camera mode by scanning a QR code with their mobile device to provide an additional viewing angle.
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Chap4/student_mobile_camera_setup.jpg}
+    \caption{Mobile Camera Setup - QR Code Pairing for Dual Camera Mode}
+    \label{fig:student_camera}
+\end{figure}
+
+\subsection{Taking Proctored Exam}
+
+The exam interface includes header with timer, question display panel, and proctoring monitor with live camera feed. Students see their current question with multiple choice options or text input for written answers, a timer counting down remaining time, navigation buttons, and a question palette showing attempted/unattempted status. The proctoring monitor displays the live camera feed with AI analysis status, current accuracy score (0-100\%), real-time violation warnings, and violation counter. Students receive immediate feedback through visual indicators, pop-up warnings for detected violations, and accuracy score updates.
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Chap4/student_exam_interface.png}
+    \caption{Exam Interface - Question Display and Timer}
+    \label{fig:student_exam}
+\end{figure}
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Chap4/student_proctoring_feedback.png}
+    \caption{Proctoring Feedback - Real-time AI Monitoring}
+    \label{fig:student_feedback}
+\end{figure}
+
+\subsection{Exam History and Profile}
+
+Students view complete exam history with filtering options and manage personal profile. The exam history section displays all past exams with dates, scores, violation counts, and status (passed/failed/pending). Students can filter by date range, course, or exam type. The profile section allows students to update personal information, academic details, change password, and manage notification preferences.
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Chap4/student_exam_history.jpg}
+    \caption{Exam History - Past Performance Records}
+    \label{fig:student_history}
+\end{figure}
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Chap4/student_profile.jpg}
+    \caption{Student Profile - Personal Information Management}
+    \label{fig:student_profile}
+\end{figure}
+
+\section{Summary}
+
+This chapter presented the complete implementation of the AI-Powered Online Exam Proctoring System with role-based interfaces for Admin, Teacher, and Student users. The system integrates modern web technologies (React 19.0, Flask 3.1.1), AI models (YOLOv8n, MediaPipe), and real-time communication (WebRTC, Socket.IO) to deliver a robust proctoring solution. Key achievements include multi-step exam creation, dual camera support with QR code pairing, real-time violation detection with 8-level priority system, live monitoring dashboard with grid view, automated and manual grading capabilities, and comprehensive user management with appeal processes.
