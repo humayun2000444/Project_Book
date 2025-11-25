@@ -42,10 +42,11 @@
 }
 
 %-- Margins --
-\if@twoside \oddsidemargin 0.5in \evensidemargin 0in \marginparwidth .6in \textheight=8.95in
-\else \oddsidemargin 0.5in \marginparwidth .9in \textheight=9.0in\fi% left margin=1in + oddsidemargin, marginparwidth: text box for margin notes
-\topmargin -.7in \headheight 0.35in \headsep 0.35in \footskip 0.5in % header and footer margins
-\textwidth=6.0in % width of the text body on a page
+% Left margin = 1.5in, Right margin = 1in, Top margin = 1in, Bottom margin = 1in
+\if@twoside \oddsidemargin 0.5in \evensidemargin 0in \marginparwidth .6in \textheight=9.0in
+\else \oddsidemargin 0.5in \marginparwidth .9in \textheight=9.0in\fi% left margin=1in + oddsidemargin = 1.5in
+\topmargin -0.5in \headheight 0.25in \headsep 0.25in \footskip 0.5in % header and footer margins for 1in top/bottom
+\textwidth=6.0in % width of the text body on a page (8.5 - 1.5 - 1 = 6in)
 % The top margin = 1in plus vspace. For some reason, need to subtract 0.35in also. -jg
 \def\vertadjust{\vspace{-0.35in}} % Required for proper vertical spacing. -jg
 \def\twoinmar{\vertadjust\vspace{1.0in}} % Two inch top margin -jg
@@ -65,7 +66,7 @@
 
  \begin{center}
  \begin{onehalfspacing} % For the `Large' font size, this will look single spaced. -jg
-  {\Large\bf #1 \mbox{}} \\
+  {\fontsize{16pt}{19pt}\selectfont\bf #1 \mbox{}} \\
  \end{onehalfspacing}
    \begin{figure}[ht]
 	\centering
