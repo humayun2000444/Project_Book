@@ -49,8 +49,9 @@
 \textwidth=6.0in % width of the text body on a page (8.5 - 1.5 - 1 = 6in)
 % The top margin = 1in plus vspace. For some reason, need to subtract 0.35in also. -jg
 \def\vertadjust{\vspace{-0.35in}} % Required for proper vertical spacing. -jg
-\def\twoinmar{\vertadjust\vspace{1.0in}} % Two inch top margin -jg
-\def\twohalfinmar{\vertadjust\vspace{1.5in}} % Two and a half inch top margin -jg
+\def\oneinmar{\vertadjust\vspace{0in}} % One inch top margin (1in base + 0in = 1in)
+\def\twoinmar{\oneinmar} % Changed to 1 inch top margin for all sections
+\def\twohalfinmar{\vertadjust\vspace{1.5in}} % Two and a half inch top margin -jg (keep for title page only)
 
 %-- Front pages --
 
@@ -169,18 +170,18 @@
  \newpage
  \addcontentsline{toc}{chapter}{ACKNOWLEDGEMENTS}
  \hbox{ }
- \twoinmar
+ \oneinmar
  \centerline{\large\bf ACKNOWLEDGEMENTS}
- \vspace{0.7in}
+ \vspace{0.3in}
 }
 
 \def\startdeclarationpage{
  \newpage
  \addcontentsline{toc}{chapter}{DECLARATION}
  \hbox{ }
- \twoinmar
+ \oneinmar
  \centerline{\large\bf DECLARATION}
- \vspace{0.7in}
+ \vspace{0.3in}
 }
 
 
@@ -188,9 +189,9 @@
  \newpage
  \addcontentsline{toc}{chapter}{CERTIFICATE}
  \hbox{ }
- \twoinmar
+ \oneinmar
  \centerline{\large\bf CERTIFICATE}
- \vspace{0.7in}
+ \vspace{0.3in}
 }
 
 
@@ -204,9 +205,9 @@
  \newpage
  \addcontentsline{toc}{chapter}{ABSTRACT}
  \hbox{ }
- \twoinmar
+ \oneinmar
  \centerline{\large\bf ABSTRACT}
- \vspace{0.7in}
+ \vspace{0.3in}
 }
 
 %-- Table of contents and lists --
@@ -248,9 +249,9 @@
  \newpage
  \@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn\fi
  \hbox{ }
- \twoinmar
+ \oneinmar
  \centerline{\large\bf TABLE OF CONTENTS}
- \vspace{0.7in}
+ \vspace{0.3in}
  \begin{singlespace}
   \@starttoc{toc}\if@restonecol\twocolumn\fi
  \end{singlespace}
@@ -261,9 +262,9 @@
  \addcontentsline{toc}{chapter}{LIST OF FIGURES}
  \@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn\fi
  \hbox{ }
- \twoinmar
+ \oneinmar
  \centerline{\large\bf LIST OF FIGURES}
- \vspace{0.7in}
+ \vspace{0.3in}
  \begin{singlespace}
   \@starttoc{lof}\if@restonecol\twocolumn\fi
   \addtocontents{lof}{\noindent\underline{\bf Figure}\hfill\rm\protect\newline}
@@ -276,9 +277,9 @@
  \addcontentsline{toc}{chapter}{LIST OF TABLES}
  \@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn\fi
  \hbox{ }
- \twoinmar
+ \oneinmar
  \centerline{\large\bf LIST OF TABLES}
- \vspace{0.7in}
+ \vspace{0.3in}
  \begin{singlespace}
   \@starttoc{lot}\if@restonecol\twocolumn\fi
   \addtocontents{lot}{\noindent\underline{\bf Table}\hfill\rm\protect\newline}
@@ -290,9 +291,9 @@
  \addcontentsline{toc}{chapter}{LIST OF MAPS}
  \@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn\fi
  \hbox{ }
- \twoinmar
+ \oneinmar
  \centerline{\large\bf LIST OF MAPS}
- \vspace{0.7in}
+ \vspace{0.3in}
  \begin{singlespace}
   \@starttoc{lom}\if@restonecol\twocolumn\fi
   \addtocontents{lom}{\noindent\underline{\bf Map}\hfill\rm\protect\newline}
@@ -304,9 +305,9 @@
  \addcontentsline{toc}{chapter}{LIST OF APPENDICES}
  \@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn\fi
  \hbox{ }
- \twoinmar
+ \oneinmar
  \centerline{\large\bf LIST OF APPENDICES}
- \vspace{0.7in}
+ \vspace{0.3in}
  \begin{singlespace}
   \@starttoc{loa}\if@restonecol\twocolumn\fi
   \addtocontents{loa}{\noindent\underline{\bf Appendix}\hfill\rm\protect\newline}
@@ -377,11 +378,11 @@
  {\parindent 0pt \raggedright
   \ifnum \c@secnumdepth >\m@ne
   \centerline{\large\bf \@chapapp{} \thechapter} \par
-  \vskip 0.3in \fi
+  \vskip 0.2in \fi
   \begin{center}
    \Large\bf #1
   \end{center}
-  \nobreak \vskip 0.7in
+  \nobreak \vskip 0.4in
  }
  \@afterindenttrue
 }
