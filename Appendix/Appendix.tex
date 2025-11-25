@@ -1,0 +1,381 @@
+\chapter{Appendix}
+\label{chap:appendix}
+
+This appendix contains the core source code implementations for the Online Exam Proctoring Platform with AI. The code is organized into Backend (Python/Flask) and Frontend (React.js) sections.
+
+\section{Backend Implementation}
+
+\subsection{Main Application Entry Point (app.py)}
+
+The Flask application factory pattern with Socket.IO integration:
+
+\begin{verbatim}
+import os
+from flask import Flask, jsonify
+from extensions import socketio
+from utils.cors_handler import configure_cors
+from socket_events import register_socketio_events
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def create_app():
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+
+    @app.after_request
+    def after_request(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        return response
+
+    configure_cors(app)
+    socketio.init_app(app, cors_allowed_origins="*")
+    register_socketio_events(socketio)
+
+    # Register blueprints
+    app.register_blueprint(auth_routes, url_prefix='/api')
+    app.register_blueprint(exam_bp, url_prefix='/api')
+    app.register_blueprint(proctoring_bp, url_prefix='/api')
+    return app
+
+app = create_app()
+
+if __name__ == '__main__':
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+\end{verbatim}
+
+\subsection{AI Proctoring Engine (optimized\_proctoring.py)}
+
+Core AI detection using YOLOv8n and MediaPipe:
+
+\begin{verbatim}
+import torch, cv2, base64, numpy as np
+from ultralytics import YOLO
+import mediapipe as mp
+
+PROCESSING_INTERVAL = 0.15  # 6-7 FPS
+YOLO_IMG_SIZE = 416
+CONFIDENCE_THRESHOLD = 0.4
+
+TARGET_OBJECTS = {
+    'mobile_phone': ['cell phone', 'phone', 'smartphone'],
+    'headphones': ['headphones', 'headset', 'earphones'],
+    'smartwatch': ['watch', 'smartwatch', 'apple watch'],
+    'electronics': ['laptop', 'tablet', 'calculator']
+}
+
+def initialize_optimized_models():
+    global yolo_model, face_detection, face_mesh
+    yolo_model = YOLO("models/yolov8n.pt")
+
+    mp_face = mp.solutions.face_detection
+    face_detection = mp_face.FaceDetection(
+        model_selection=1, min_detection_confidence=0.7)
+
+    mp_mesh = mp.solutions.face_mesh
+    face_mesh = mp_mesh.FaceMesh(
+        max_num_faces=3, min_detection_confidence=0.6)
+    return True
+
+def detect_priority_objects(image):
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    results = yolo_model(image_rgb, imgsz=YOLO_IMG_SIZE,
+                         conf=CONFIDENCE_THRESHOLD, device='cpu')
+    detected = {k: False for k in TARGET_OBJECTS.keys()}
+
+    for r in results:
+        if r.boxes is not None:
+            for box in r.boxes:
+                label = yolo_model.names[int(box.cls[0])].lower()
+                for cat, keywords in TARGET_OBJECTS.items():
+                    if any(kw in label for kw in keywords):
+                        detected[cat] = True
+    return detected
+
+def analyze_face_features(image):
+    rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    results = face_detection.process(rgb)
+
+    analysis = {'face_detected': False, 'multiple_faces': False,
+                'looking_away': False, 'face_count': 0}
+
+    if results.detections:
+        analysis['face_detected'] = True
+        analysis['face_count'] = len(results.detections)
+        analysis['multiple_faces'] = analysis['face_count'] > 1
+
+        mesh = face_mesh.process(rgb)
+        if mesh.multi_face_landmarks:
+            nose = mesh.multi_face_landmarks[0].landmark[1]
+            analysis['looking_away'] = nose.y > 0.65 or nose.y < 0.35
+    return analysis
+\end{verbatim}
+
+\subsection{Socket.IO Real-Time Events (socket\_events.py)}
+
+WebSocket event handlers for real-time communication:
+
+\begin{verbatim}
+from flask_socketio import emit, join_room
+from flask import request
+
+connected_students = {}
+student_sockets = {}
+teacher_sockets = set()
+
+def register_socketio_events(socketio):
+    @socketio.on('student_join')
+    def on_student_join(data):
+        student_id = data.get('student_id')
+        join_room(data.get('room_id', 'default'))
+        join_room(f'student_{student_id}')
+
+        connected_students[student_id] = {
+            'id': student_id, 'name': data.get('name'),
+            'alerts': [], 'isSuspicious': False
+        }
+        student_sockets[student_id] = request.sid
+        emit('student_list_update',
+             list(connected_students.values()), broadcast=True)
+
+    @socketio.on('teacher_join')
+    def on_teacher_join(data=None):
+        teacher_sockets.add(request.sid)
+        join_room('teachers')
+        emit('student_list_update', list(connected_students.values()))
+        emit('request_offer', {}, room='students')
+
+    @socketio.on('student_offer')
+    def on_student_offer(data):
+        emit('student_offer', data, room='teachers')
+
+    @socketio.on('teacher_answer')
+    def on_teacher_answer(data):
+        sid = student_sockets.get(data.get('to'))
+        if sid:
+            emit('teacher_answer',
+                 {'answer': data.get('answer')}, room=sid)
+
+    @socketio.on('proctor_data')
+    def on_proctor_data(data):
+        sid = data.get('student_id')
+        if sid in connected_students:
+            connected_students[sid]['alerts'] = data.get('alerts', [])
+            connected_students[sid]['isSuspicious'] = \
+                len(data.get('alerts', [])) > 0
+        emit('proctor_data', data, room='teachers')
+\end{verbatim}
+
+\section{Frontend Implementation}
+
+\subsection{Student Exam Interface (JoinExam.js)}
+
+React component for student exam participation with WebRTC:
+
+\begin{verbatim}
+import React, { useEffect, useRef, useState } from 'react';
+import axios from 'axios';
+import { io } from 'socket.io-client';
+import config from '../../config';
+
+const JoinExam = () => {
+    const videoRef = useRef(null);
+    const socket = useRef(null);
+    const peerConnection = useRef(null);
+    const [analysisResult, setAnalysisResult] = useState(null);
+
+    useEffect(() => {
+        socket.current = io(config.API_BASE_URL);
+        socket.current.on('connect', () => {
+            socket.current.emit('student_join', {
+                student_id: user.student_id,
+                name: user.name, room_id: 'exam123'
+            });
+            setupWebRTC();
+        });
+
+        socket.current.on('teacher_answer', async ({ answer }) => {
+            if (peerConnection.current?.signalingState ===
+                'have-local-offer') {
+                await peerConnection.current.setRemoteDescription(
+                    new RTCSessionDescription(answer));
+            }
+        });
+
+        startCamera();
+        const interval = setInterval(captureAndSendFrame, 3000);
+        return () => {
+            clearInterval(interval);
+            socket.current.disconnect();
+        };
+    }, []);
+
+    const setupWebRTC = async () => {
+        const stream = await navigator.mediaDevices
+                           .getUserMedia({ video: true });
+        videoRef.current.srcObject = stream;
+        peerConnection.current = new RTCPeerConnection();
+
+        stream.getTracks().forEach(track =>
+            peerConnection.current.addTrack(track, stream));
+
+        peerConnection.current.onicecandidate = (e) => {
+            if (e.candidate) {
+                socket.current.emit('ice_candidate', {
+                    to: 'teacher', candidate: e.candidate
+                });
+            }
+        };
+
+        const offer = await peerConnection.current.createOffer();
+        await peerConnection.current.setLocalDescription(offer);
+        socket.current.emit('student_offer',
+                           { offer, student_id });
+    };
+
+    const captureAndSendFrame = async () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        canvas.getContext('2d')
+              .drawImage(videoRef.current, 0, 0);
+        const base64 = canvas.toDataURL('image/jpeg').split(',')[1];
+
+        const res = await axios.post(
+            `${config.API_BASE_URL}/api/analyze`,
+            { image: base64, student_id: user.student_id }
+        );
+        setAnalysisResult(res.data);
+    };
+
+    return (
+        <div className="exam-container">
+            <video ref={videoRef} autoPlay muted playsInline />
+            {analysisResult && (
+                <div className="analysis-panel">
+                    <div>Score: {analysisResult.accuracy_score}%</div>
+                    <div>Risk: {analysisResult.risk_level}</div>
+                </div>
+            )}
+        </div>
+    );
+};
+export default JoinExam;
+\end{verbatim}
+
+\subsection{Teacher Proctoring Dashboard (ProctorExam.js)}
+
+React component for live monitoring of students:
+
+\begin{verbatim}
+import React, { useEffect, useRef, useState } from 'react';
+import { io } from 'socket.io-client';
+import config from '../../config';
+
+const ProctorExam = () => {
+    const [students, setStudents] = useState([]);
+    const socket = useRef(null);
+    const peerConnections = useRef({});
+
+    useEffect(() => {
+        socket.current = io(config.API_BASE_URL);
+        socket.current.emit('teacher_join');
+
+        socket.current.on('student_list_update', (list) => {
+            setStudents(prev => list.map(student => ({
+                ...student,
+                stream: prev.find(s => s.id === student.id)?.stream
+            })));
+        });
+
+        socket.current.on('student_offer',
+            async ({ offer, student_id }) => {
+            const pc = new RTCPeerConnection();
+
+            pc.ontrack = (event) => {
+                setStudents(prev => prev.map(s =>
+                    s.id === student_id
+                        ? { ...s, stream: event.streams[0] } : s
+                ));
+            };
+
+            pc.onicecandidate = (e) => {
+                if (e.candidate) {
+                    socket.current.emit('ice_candidate', {
+                        to: student_id, candidate: e.candidate
+                    });
+                }
+            };
+
+            await pc.setRemoteDescription(
+                new RTCSessionDescription(offer));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            socket.current.emit('teacher_answer',
+                { to: student_id, answer });
+            peerConnections.current[student_id] = pc;
+        });
+
+        return () => {
+            socket.current.disconnect();
+            Object.values(peerConnections.current)
+                  .forEach(pc => pc.close());
+        };
+    }, []);
+
+    return (
+        <div className="proctor-dashboard">
+            <h1>Live Exam Proctoring</h1>
+            <div className="student-grid">
+                {students.map(s => (
+                    <StudentTile key={s.id} student={s} />
+                ))}
+            </div>
+        </div>
+    );
+};
+export default ProctorExam;
+\end{verbatim}
+
+\section{Database Schema Overview}
+
+The MySQL database consists of 21 normalized tables in Third Normal Form (3NF). Key tables include:
+
+\begin{itemize}
+    \item \textbf{users} - User credentials and roles (student, teacher, admin)
+    \item \textbf{students} - Student profiles linked to departments
+    \item \textbf{teachers} - Teacher profiles and department assignments
+    \item \textbf{exams} - Exam metadata, duration, type, scheduling
+    \item \textbf{exam\_questions} - MCQ questions with options
+    \item \textbf{exam\_results} - Student scores and submissions
+    \item \textbf{proctoring\_violations} - Violation logs with screenshots
+    \item \textbf{window\_violations} - Tab switching records
+    \item \textbf{notifications} - Real-time alert messages
+\end{itemize}
+
+\section{API Endpoints Summary}
+
+\begin{verbatim}
+Authentication:
+  POST /api/login          - User authentication
+  POST /api/register       - New user registration
+
+Exam Management:
+  GET  /api/exams          - List all exams
+  POST /api/exams          - Create new exam
+  GET  /api/exam/:id       - Get exam details
+  POST /api/submit-mcq-exam - Submit MCQ answers
+
+Proctoring:
+  POST /api/analyze        - AI frame analysis
+  GET  /api/violations/:id - Get student violations
+  POST /api/window-violations - Report violation
+
+Admin:
+  GET  /api/admin/students - List all students
+  POST /api/admin/students - Add new student
+  GET  /api/admin/teachers - List all teachers
+\end{verbatim}
+
