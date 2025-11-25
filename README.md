@@ -2,7 +2,7 @@
 
 ## Project Information
 
-**Title:** Online Exam Proctoring Platform with AI-Powered Real-Time Monitoring
+**Title:** Online Exam Proctoring Platform with AI
 
 **Student:** Humayun Ahmed
 **Registration No:** 19502005005
